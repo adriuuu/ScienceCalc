@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Científica</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a; --calc-bg: #1e293b; --btn-num: #334155; 
+            --btn-op: #3b82f6; --btn-c: #ef4444; --text-light: #f8fafc;
+            --portal-bg: #09090b; --card-bg: #18181b; --accent: #6366f1;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg-dark); display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; color: var(--text-light); }
+
+        /* --- CALCULADORA --- */
+        #calc-view { width: 340px; background: var(--calc-bg); padding: 25px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); border: 1px solid #334155; }
+        .brand { font-size: 12px; color: #94a3b8; text-align: center; margin-bottom: 15px; font-weight: 600; letter-spacing: 2px; }
+        
+        #display { 
+            width: 100%; height: 90px; background: #0f172a; color: #38bdf8; 
+            text-align: right; font-size: 48px; border: 2px solid #334155; border-radius: 16px; 
+            margin-bottom: 25px; padding: 15px; outline: none; font-variant-numeric: tabular-nums;
+        }
+
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        button { 
+            height: 65px; border: none; border-radius: 14px; font-size: 24px; font-weight: 600;
+            color: white; cursor: pointer; background: var(--btn-num); transition: all 0.1s ease;
+        }
+        button:active { transform: scale(0.92); filter: brightness(1.3); }
+        .btn-op { background: var(--btn-op); }
+        .btn-c { background: var(--btn-c); }
+        .btn-eq { background: #10b981; grid-row: span 2; height: 142px; }
+        .btn-zero { grid-column: span 2; }
+
+        /* --- PORTAL ARCADE --- */
+        #portal { display: none; position: fixed; inset: 0; background: var(--portal-bg); z-index: 1000; flex-direction: column; overflow-y: auto; }
+        .portal-header { background: #000; padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 10; }
+        .portal-header h1 { font-size: 20px; font-weight: 800; background: linear-gradient(to right, #6366f1, #a855f7); -webkit-background-clip: text; color: transparent; }
+        .close-portal { background: var(--btn-num); padding: 8px 16px; border-radius: 8px; font-size: 14px; color: white; border: none; cursor: pointer; }
+        
+        .grid-juegos { display: grid; padding: 30px; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); max-width: 1200px; margin: 0 auto; width: 100%; }
+        .card { background: var(--card-bg); border-radius: 16px; cursor: pointer; transition: 0.2s; border: 1px solid #27272a; display: flex; flex-direction: column; overflow: hidden; }
+        .card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2); }
+        .card-img { height: 120px; background: #27272a; display: flex; align-items: center; justify-content: center; font-size: 50px; }
+        .card-title { padding: 15px; font-size: 14px; font-weight: bold; text-align: center; color: white; }
+
+        /* --- REPRODUCTOR (IFRAME) --- */
+        #theater { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
+        .theater-bar { background: #111; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        .theater-bar h2 { font-size: 16px; color: #fff; font-weight: 500; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn-external { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-back { background: #334155; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        iframe { width: 100%; height: 100%; border: none; background: #000; flex-grow: 1; }
+    </style>
+</head>
+<body>
+
+    <div id="calc-view">
+        <div class="brand">TEXAS INSTRUMENTS TI-84</div>
+        <input type="text" id="display" readonly value="0">
+        <div class="keypad">
+            <button class="btn-c" onclick="presionar('C')">C</button>
+            <button class="btn-op" onclick="presionar('(')">(</button>
+            <button class="btn-op" onclick="presionar(')')">)</button>
+            <button class="btn-op" onclick="presionar('/')">÷</button>
+            
+            <button onclick="presionar('7')">7</button>
+            <button onclick="presionar('8')">8</button>
+            <button onclick="presionar('9')">9</button>
+            <button class="btn-op" onclick="presionar('*')">×</button>
+            
+            <button onclick="presionar('4')">4</button>
+            <button onclick="presionar('5')">5</button>
+            <button onclick="presionar('6')">6</button>
+            <button class="btn-op" onclick="presionar('-')">-</button>
+            
+            <button onclick="presionar('1')">1</button>
+            <button onclick="presionar('2')">2</button>
+            <button onclick="presionar('3')">3</button>
+            <button class="btn-eq" onclick="presionar('=')">=</button>
+            
+            <button class="btn-zero" onclick="presionar('0')">0</button>
+            <button onclick="presionar('.')">.</button>
+        </div>
+    </div>
+
+    <div id="portal">
+        <div class="portal-header">
+            <h1>NEXUS ARCADE</h1>
+            <button class="close-portal" onclick="cerrarPortal()">Volver a Calculadora</button>
+        </div>
+        <div class="grid-juegos" id="main-grid"></div>
+    </div>
+
+    <div id="theater">
+        <div class="theater-bar">
+            <h2 id="game-title">Juego</h2>
+            <div class="btn-group">
+                <button class="btn-external" onclick="abrirFuera()">PANTALLA COMPLETA</button>
+                <button class="btn-back" onclick="volverMenu()">Volver al Menú</button>
+            </div>
+        </div>
+        <iframe id="ifr" src="" allowfullscreen></iframe>
+    </div>
+
+    <script>
+        // LÓGICA A PRUEBA DE FALLOS (Sin 'eval', cero bloqueos de seguridad)
+        let valorEnPantalla = "0";
+        const display = document.getElementById('display');
+
+        // Esta función ahora cuelga de "window" para garantizar que los botones la encuentren siempre
+        window.presionar = function(tecla) {
+            if (tecla === 'C') {
+                valorEnPantalla = "0";
+            } else if (tecla === '=') {
+                valorEnPantalla = "Syntax Error"; // Simulamos un error para despistar
+                setTimeout(() => { presionar('C'); }, 1000); // Borra el error al segundo
+            } else {
+                if (valorEnPantalla === "0" || valorEnPantalla === "Syntax Error") {
+                    valorEnPantalla = tecla;
+                } else {
+                    valorEnPantalla += tecla;
+                }
+            }
+            
+            display.value = valorEnPantalla;
+
+            // EL CÓDIGO SECRETO (Comprueba si has tecleado 0000 en cualquier momento)
+            if (valorEnPantalla.includes("0000")) {
+                abrirPortal();
+            }
+        };
+
+        // SOPORTE PARA TECLADO (Para que puedas teclear los números cómodamente)
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            if (/[0-9\+\-\*\/\(\)\.]/.test(key)) {
+                presionar(key);
+            } else if (key === 'Enter') {
+                presionar('=');
+            } else if (key === 'Backspace' || key.toLowerCase() === 'c' || key === 'Escape') {
+                presionar('C');
+            }
+        });
+
+        // BASE DE DATOS DE JUEGOS
+        const juegos = [
+            { n: "Drift Hunters", i: "🏎️", u: "https://drift-hunters.github.io/" },
+            { n: "Flappy Bird", i: "🦅", u: "https://nebezb.com/floppybird/" },
+            { n: "Slope", i: "🟢", u: "https://slope-game.github.io/" },
+            { n: "1v1.LOL", i: "🔫", u: "https://1v1.lol/" },
+            { n: "Smash Karts", i: "💣", u: "https://smashkarts.io/" },
+            { n: "Subway Surfers", i: "🛹", u: "https://subwaysurfers.com/" },
+            { n: "Cookie Clicker", i: "🍪", u: "https://orteil.dashnet.org/cookieclicker/" },
+            { n: "2048", i: "🧩", u: "https://play2048.co/" },
+            { n: "Tetris", i: "🧱", u: "https://tetris.com/play-tetris" },
+            { n: "Paper.io 2", i: "📄", u: "https://paper-io.com/" },
+            { n: "Retro Bowl", i: "🏈", u: "https://game312.github.io/retro-bowl/" },
+            { n: "Moto X3M", i: "🏍️", u: "https://moto-x3m.github.io/" }
+        ];
+
+        let urlActual = "";
+
+        // FUNCIONES DEL PORTAL
+        function abrirPortal() {
+            document.getElementById('calc-view').style.display = 'none';
+            document.getElementById('portal').style.display = 'flex';
+            valorEnPantalla = "0"; // Reseteamos la calculadora en la sombra
+            display.value = valorEnPantalla;
+            
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = ""; 
+            
+            juegos.forEach(j => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<div class="card-img">${j.i}</div><div class="card-title">${j.n}</div>`;
+                card.onclick = () => cargarJuego(j.u, j.n);
+                grid.appendChild(card);
+            });
+        }
+
+        function cerrarPortal() {
+            document.getElementById('portal').style.display = 'none';
+            document.getElementById('calc-view').style.display = 'block';
+        }
+
+        function cargarJuego(url, nombre) {
+            urlActual = url;
+            document.getElementById('portal').style.display = 'none';
+            document.getElementById('theater').style.display = 'flex';
+            document.getElementById('game-title').innerText = nombre;
+            document.getElementById('ifr').src = url;
+        }
+
+        function volverMenu() {
+            document.getElementById('theater').style.display = 'none';
+            document.getElementById('portal').style.display = 'flex';
+            document.getElementById('ifr').src = ""; 
+        }
+
+        function abrirFuera() {
+            window.open(urlActual, '_blank');
+        }
+    </script>
+</body>
+</html>
